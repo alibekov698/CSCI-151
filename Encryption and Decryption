@@ -1,0 +1,62 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+int main( void ){
+
+    int secret, input, range = 10000, ave = 0, numOfGames = 0;
+    char ch;
+
+    time_t t;
+
+    srand ((unsigned)time(&t));
+    secret = rand() % 10000;
+    printf("WELCOME to the guessing game!\n");
+
+    while(1){
+        if(ch != '\n'){
+            printf("MENU: (s) to start a game, (n) to set a new range, or (q) to quit:\n");
+            }
+        scanf("%c", &ch);
+        if(ch == '\n'){
+           continue;
+        }
+        if(ch == 'q' && numOfGames != 0){
+            printf("Thanks for playing. Your guess count AVERAGE %f\n", (double)ave/numOfGames);
+            return 0;
+        }
+        else if(ch == 'q' && numOfGames == 0){
+            printf("Thanks for playing. Your guess count AVERAGE %f\n", (double)ave);
+            return 0;
+        }
+        else if(ch == 's'){
+            numOfGames++;
+            int count = 0;
+            srand ((unsigned)time(&t));
+            secret = rand() % range;
+            printf("The secret number is BETWEEN 0 AND %i. Guess:\n", range - 1);
+            while(1){
+                scanf("%i", &input);
+                count++;
+                if(secret > input){
+                    printf("Too LOW! Guess:\n");
+                } else if(secret < input) {
+                    printf("Too HIGH! Guess:\n");
+                } else{
+                    printf("Correct: You TOOK %i guesses!\n", count);
+                    ave = ave + count;
+                    break;
+                }
+            }
+        }
+        else if(ch == 'n'){
+            printf("Enter a new MAXIMUM:\n");
+            scanf("%i", &range);
+            range++;
+        }
+        else{
+            printf("UNRECOGNIZED command.\n");
+        }
+    }
+    return 0;
+}
