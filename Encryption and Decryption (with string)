@@ -1,0 +1,129 @@
+/*
+    *CSCI 151 Fall 2018
+    *Homework 2
+    *author: Nurbek Alibekov
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char ch_key[254];
+// I created a KeyFile function for reading key.254 file.
+void KeyFile (FILE *File_Key) {
+    char c;
+    int i = 0;
+    do {
+        c = getc(File_Key);
+        if(c != EOF) {
+            ch_key[i] = c;
+            i++;
+        }
+    } while (c != EOF);
+}
+// Next, I created an encrypt function for the encryption process.
+void encrypt( FILE *fin, FILE *fout, char subarr[], char pass[]) {
+    char c;
+    int i = 0;
+    int length = strlen(pass);// I find the length of the password.
+    do {
+        c = getc(fin);// I am taking the characters from the plain text file.
+        if(c != EOF) {
+            int sum = (unsigned char) c + (unsigned char) pass[i % length];// I am adding it ("c") to the characters from the password.
+            //I am taking modulo 254 of the sum to get a number between 0 and 253.
+            //Then, I am using that number as an index into the keyfile to find the encrypted character.
+            putc(subarr[sum % 254], fout);
+            i++;
+        }
+    } while(c != EOF);
+}
+// Here, I created a decrypt function for the decryption process.
+void decrypt( FILE *fin, FILE *fout, char subarr[], char pass[]) {
+    char c;
+    int i = 0;
+    int length = strlen(pass);
+    do {
+        c = getc(fin);// I am taking the characters from the encrypted file.
+        int j = 0;
+        for(; j < 254; j++) {// I am finding its index in the keyfile.
+            if(subarr[j] == c) {
+                break;
+            }
+        }
+        if(c != EOF) {
+            int subtraction = j - pass[i % length];// I am taking that index and subtract the password characters from it.
+            if(subtraction < 0) { // I am using "if condition" of that result to get the plain text character by adding 254.
+                subtraction = subtraction + 254;
+            }
+            putc(subtraction, fout);
+            i++;
+        }
+    } while(c != EOF);
+}
+
+int main() {
+
+    char password[254], input[254];
+
+    printf("WELCOME to the encryption service.\n");
+    printf("ENTER your password\n");
+    scanf("%s", &password);
+
+    FILE *finput, *foutput, *fkey;
+	char name_file[254], enc_file[254], dec_file[254];
+
+    fkey = fopen("key.254", "r");
+    if(fkey == NULL){ // Here, I am checking a file key.254 for validity.
+        printf("CANNOT open key.254\n");
+		return 1;
+	}
+    KeyFile(fkey); //Now, I am calling KeyFile.
+
+    while (1) {
+        printf("MENU: <e>ncode, <d>ecode, or <q>uit\n");
+        scanf("%s", &input);
+
+        if(input[0] == 'e') {
+
+            printf("ENTER a file to encrypt\n");
+            scanf("\n%s", &name_file);
+            finput = fopen(name_file, "r");
+            if(finput == NULL) { // Here, I am checking the file for validity.
+                printf("CANNOT open %s\n", name_file);
+                continue;
+            }
+
+            printf("ENTER a filename for the encrypted file.\n");
+            scanf("%s", &enc_file);
+            foutput = fopen(enc_file, "w");
+
+            encrypt(finput, foutput, ch_key, password);//Now, I am calling encrypt.
+        }
+        else if(input[0] == 'd') {
+
+            printf("ENTER a file to decrypt\n");
+            scanf("\n%s", &name_file);
+            finput = fopen(name_file, "r");
+            if(finput == NULL) { // Here, I am checking the input file for validity.
+                printf("CANNOT open %s\n", name_file);
+                continue;
+            }
+
+            printf("ENTER a filename for the decrypted file.\n");
+            scanf("%s", &dec_file);
+            foutput = fopen(dec_file, "w");
+
+            decrypt(finput, foutput, ch_key, password);// Now, I am calling decrypt.
+        }
+        else if(input[0] == 'q') {
+           printf("BYE!\n");
+           break;
+        } else {
+            printf("UNRECOGNIZED %s\n", input);
+        }
+
+        fclose(finput);
+        fclose(foutput);
+        fclose(fkey);
+    }
+	return 0;
+}
