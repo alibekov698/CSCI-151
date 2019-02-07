@@ -1,0 +1,143 @@
+/*
+* CSCI_151, Assignment 3
+* Date: 10 November 2018
+* author: Nurbek Alibekov
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void writeFile(char fileName[], char ssData[], char oStringData[][50], int nrIOfileLines){
+    FILE *output;//Opens the file
+    output = fopen(fileName, "a");
+    if(output == NULL){//Checks for validity
+        printf("Cannot open output file\n");
+        return 1;
+    }
+    fprintf(output, "%s\n", ssData);//Writes the checked substring to the file
+    for(int i = 0; i < nrIOfileLines; i++){//Writes the data out to the file
+        fprintf(output, "%s\n", oStringData[i]);
+    }
+    fprintf(output, "\n");
+    fclose(output);//Closes the file
+}
+
+int isPalindrome(char str[]){
+    int x = 1;
+    for(int i = 0; i < strlen(str)/2; i++){//Checks if the string passed in is a palindrome
+        if(str[i] != str[strlen(str) - i - 1]){
+            x = 0;
+        }
+    }
+    return x;//Returns is a palindrome or not
+}
+
+char *getPalindrome(char str[]){
+    if(isPalindrome(str)){
+        return "Is_Palindrome";//Returns "Is_Palindrome", when the string is a palindrome
+    } else {
+        return "Not_Palindrome";//Returns "Not_Palindrome", when the string is not a palindrome
+    }
+}
+
+int howManySubstrings(char subStr[], char str[]){
+    int num_occurrences = 0;
+    int i = 0;
+    while(i <= strlen(str) - strlen(subStr)){//Checks how many non-overlapping occurrences of substring occur in each string
+        int j = 0;
+        while(j < strlen(subStr)){
+            if(str[i+j] != subStr[j]){
+                break;
+            }
+            j++;
+        }
+        if(j == strlen(subStr)){
+            num_occurrences++;
+            i = i + j;
+            continue;
+        }
+        i++;
+    }
+    return num_occurrences;//Returns number of non-overlapping occurrences
+}
+
+void checkSubstringPalindrome(char subStr[], char iStringData[][50], char oStringData[][50], int nrIOfileLines){
+
+    for (int i = 0; i < nrIOfileLines; i++){//Writes each output line to oStringData Array
+        strcpy(oStringData[i], iStringData[i]);
+        int x = howManySubstrings(subStr, iStringData[i]);
+        char str[12];
+        sprintf(str, "%d", x);
+        strcat(oStringData[i], "\t");
+        strcat(oStringData[i], str);
+        strcat(oStringData[i], "\t");
+        strcat(oStringData[i], getPalindrome(iStringData[i]));
+        strcat(oStringData[i], "\0");
+    }
+}
+
+void readFile(char filename[], char twoDimArr[][50], int num_lines){
+    FILE *input;//Opens the file
+    input = fopen(filename, "r");
+    if(input == NULL){//Checks for validity
+        printf("Cannot open input file\n");
+        return 1;
+    }
+
+    char ch;
+    for(int i = 0; i < num_lines; i++){//Reads and saves the file data to the 2-D array
+        for(int j = 0; j < 50; j++){
+            ch = fgetc(input);
+            if(ch == '\n' || ch == EOF){
+                twoDimArr[i][j] = '\0';
+                break;
+            }
+            twoDimArr[i][j] = ch;
+        }
+    }
+
+    fclose(input);//Closes the file
+}
+
+int countFileLines(char filename[]){
+    FILE *input;//Opens the file
+    input = fopen(filename, "r");
+    if(input == NULL){//Checks for validity
+        printf("Cannot open file\n");
+        return 1;
+    }
+
+    char ch;
+    int i = 0, count = 0;
+    do {//Counts the number of lines
+        ch = fgetc(input);
+        if(ch != EOF){
+            i++;
+        }
+        if(ch == '\n'){
+            count++;
+        }
+    } while(ch != EOF);
+
+    fclose(input);//Closes the file
+    return count;//Returns the number of lines
+}
+
+int main(){
+
+    int cnt_iStrings = countFileLines("iStrings.txt");
+    char arr_iStrings[cnt_iStrings][50];
+    readFile("iStrings.txt", arr_iStrings, cnt_iStrings);
+
+    int cnt_subStrings = countFileLines("subStrings.txt");
+    char arr_subStrings[cnt_subStrings][50];
+    readFile("subStrings.txt", arr_subStrings, cnt_subStrings);
+
+    for(int i = 0; i < cnt_subStrings; i++){//Calls functions according to the number lines of subStrings
+        char arr_oStrings[cnt_iStrings][50];
+        checkSubstringPalindrome(arr_subStrings[i], arr_iStrings, arr_oStrings, cnt_iStrings);
+        writeFile("oStrings.txt", arr_subStrings[i], arr_oStrings, cnt_iStrings);
+    }
+
+    return 0;
+}
